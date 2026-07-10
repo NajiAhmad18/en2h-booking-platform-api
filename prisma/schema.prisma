@@ -1,13 +1,59 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(uuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  services     Service[] // Relation for services created by this user
+}
+
+model Service {
+  id          String    @id @default(uuid())
+  title       String
+  description String
+  duration    Int       // Duration in minutes
+  price       Decimal   @db.Decimal(10, 2)
+  isActive    Boolean   @default(true)
+  createdById String
+  createdBy   User      @relation(fields: [createdById], references: [id])
+  bookings    Booking[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+model Booking {
+  id              String        @id @default(uuid())
+  customerName    String
+  customerEmail   String
+  customerPhone   String
+  serviceId       String
+  service         Service       @relation(fields: [serviceId], references: [id])
+  bookingDateTime DateTime      // UTC Timestamp replacing separate date/time
+  status          BookingStatus @default(PENDING)
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([serviceId, bookingDateTime])
+  @@index([status])
+  @@index([bookingDateTime])
+  @@index([serviceId])
+  @@index([customerEmail])
 }

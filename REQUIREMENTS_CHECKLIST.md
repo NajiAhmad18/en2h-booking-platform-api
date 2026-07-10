@@ -1,28 +1,25 @@
 # Requirements Checklist - EN2H Booking Platform API
 
 ## Phase 1: Environment and Setup
-
-- [X] Node.js 24 verified
-- [X] Docker verified
-- [X] Strict NestJS project created
-- [X] Core dependencies installed
-- [X] Prisma initialized for PostgreSQL
-- [X] Build passed
-- [X] Starter tests passed
-- [X] .env confirmed ignored
-- [X] .env.example created
-- [X] Package functionality verification passed
-- [ ] Initial Git commit
+- [x] Node.js 24 verified
+- [x] Docker verified
+- [x] Strict NestJS project created
+- [x] Core dependencies installed
+- [x] Prisma initialized for PostgreSQL
+- [x] Build passed
+- [x] Starter tests passed
+- [x] .env confirmed ignored
+- [x] .env.example created
+- [x] Package functionality verification passed
+- [x] Initial Git commit
 
 ## Phase 2: PostgreSQL & Docker Setup
-
-- [ ] docker-compose.yml with PostgreSQL service
-- [ ] Database schema defined (Prisma)
-- [ ] Migrations run successfully
-- [ ] Seed script added
+- [x] docker-compose.yml with PostgreSQL service
+- [x] Database schema defined (Prisma)
+- [x] Migrations run successfully
+- [x] Seed script added
 
 ## Phase 3: Authentication
-
 - [ ] JWT Module configured
 - [ ] bcrypt hashing implemented
 - [ ] POST /api/v1/auth/register
@@ -30,7 +27,6 @@
 - [ ] JwtAuthGuard implemented
 
 ## Phase 4: Service Management
-
 - [ ] Service module/controller/service
 - [ ] GET /api/v1/services (Public)
 - [ ] GET /api/v1/services/:id (Public)
@@ -40,7 +36,6 @@
 - [ ] DTO validation for Services
 
 ## Phase 5: Booking Management & Business Rules
-
 - [ ] Booking module/controller/service
 - [ ] POST /api/v1/bookings (Public)
 - [ ] GET /api/v1/bookings (Protected)
@@ -54,18 +49,15 @@
 - [ ] DTO validation for Bookings
 
 ## Phase 6: Core Features (Validation, Error, Docs)
-
 - [ ] Swagger API documentation
 - [ ] Global Exception Handling
 
 ## Phase 7: Bonus Features
-
 - [ ] Pagination on bookings (and services)
 - [ ] Search and Filter (by status, date, etc.)
 - [ ] Unit & E2E Testing
 
 ## Phase 8: Documentation Finalization
-
 - [ ] README.md completed
 - [ ] SRS.md completed
 - [ ] RUNNING_GUIDE.md completed
