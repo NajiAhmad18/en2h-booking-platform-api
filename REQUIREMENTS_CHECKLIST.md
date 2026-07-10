@@ -27,13 +27,16 @@
 - [ ] JwtAuthGuard implemented
 
 ## Phase 4: Service Management
-- [ ] Service module/controller/service
-- [ ] GET /api/v1/services (Public)
-- [ ] GET /api/v1/services/:id (Public)
-- [ ] POST /api/v1/services (Protected)
-- [ ] PATCH /api/v1/services/:id (Protected)
-- [ ] DELETE /api/v1/services/:id (Protected - soft delete)
-- [ ] DTO validation for Services
+- [x] Create `ServicesModule`, `ServicesController`, `ServicesService`
+- [x] Implement logical deletion (`isActive` flag)
+- [x] Apply DTO validation (duration max, price format, required fields)
+- [x] Create unit tests and E2E tests for services (Protected)
+- [x] GET /api/v1/services (Public)
+- [x] GET /api/v1/services/:id (Public)
+- [x] POST /api/v1/services (Protected)
+- [x] PATCH /api/v1/services/:id (Protected)
+- [x] DELETE /api/v1/services/:id (Protected - soft delete)
+- [x] DTO validation for Services
 
 ## Phase 5: Booking Management & Business Rules
 - [ ] Booking module/controller/service

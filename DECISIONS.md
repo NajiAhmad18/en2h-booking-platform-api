@@ -13,3 +13,12 @@
 **E2E Test Database Isolation:** Due to time constraints in this phase, E2E tests run against the primary development database. They are made robust by using uniquely generated emails (`test_${Date.now()}@example.com`) to prevent collisions and avoid database resets. Comprehensive unit testing provides the primary validation safety net.
 
 **Password Hashing:** Passwords are hashed using `bcrypt` and salt rounds are strictly loaded from `BCRYPT_SALT_ROUNDS` via `@nestjs/config`.
+
+## Phase 4: Service Management
+**Price Serialization:** Prices are stored as Prisma `Decimal` in the database to prevent precision loss. Before returning to the client, they are serialized securely into 2-decimal strings (e.g. `"149.99"`).
+
+**Empty PATCH Requests:** Rather than checking for empty bodies manually in controllers, we built a reusable `RejectEmptyBodyPipe` to catch `{}` updates globally on PATCH requests.
+
+**Pagination Structure:** Consistent public listing is guaranteed via a `{ data, pagination }` structure calculating `totalPages`, `hasNextPage`, and limits cleanly.
+
+**Logical Deletion & Reactivation:** We enforce strict soft-deletion. Inactive services will return 404 in public reads. Since `PATCH` is supported, administrators can reactivate services by explicitly sending `{ "isActive": true }`.

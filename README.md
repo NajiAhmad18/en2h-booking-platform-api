@@ -84,6 +84,17 @@ curl -X POST http://localhost:3000/api/v1/auth/login \
 ```
 Responses do not include the `passwordHash`. Keep the returned `accessToken` and use it in subsequent requests as `Authorization: Bearer <token>`.
 
+## Service Management
+
+Public users can browse active services. Administrators (any authenticated user) can create, update, or remove them.
+- `GET /api/v1/services` (Public) - Lists all active services with pagination (`?page=1&limit=10`).
+- `GET /api/v1/services/:id` (Public) - Retrieves a specific active service.
+- `POST /api/v1/services` (Protected) - Creates a new service.
+- `PATCH /api/v1/services/:id` (Protected) - Updates a service. Send `{"isActive": true}` to reactivate a logically deleted service.
+- `DELETE /api/v1/services/:id` (Protected) - Performs logical deletion (`isActive=false`).
+
+Prices are consistently returned as 2-decimal strings.
+
 ## API Documentation
 Swagger UI is available at `http://localhost:3000/api/docs`.
 
