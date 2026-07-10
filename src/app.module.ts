@@ -7,6 +7,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { validate } from './env.validation';
 import { ServicesModule } from './services/services.module';
+import { BookingsModule } from './bookings/bookings.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ServicesModule } from './services/services.module';
     UsersModule,
     AuthModule,
     ServicesModule,
+    BookingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

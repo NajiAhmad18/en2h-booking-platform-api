@@ -114,3 +114,19 @@ Swagger UI is available at `http://localhost:3000/api/docs`.
 - GitHub: [NajiAhmad18](https://github.com/NajiAhmad18)
 - Portfolio: [najiahmad.vercel.app](https://najiahmad.vercel.app)
 - LinkedIn: [naji-ahmad-javahir](https://www.linkedin.com/in/naji-ahmad-javahir/)
+
+## Booking Management
+
+Customers can submit bookings without authentication. Administrators can query and manage bookings.
+
+### Booking Endpoints
+- `POST /api/v1/bookings` **(Public)** — Create a booking. `bookingDate` and `bookingTime` are in `Asia/Colombo` timezone. Status is always `PENDING`.
+- `GET /api/v1/bookings` **(Protected)** — Paginated list. Supports `page`, `limit`, `status`, `serviceId`, `bookingDate`, `customerEmail`, and `search` filters.
+- `GET /api/v1/bookings/:id` **(Protected)** — Retrieve a booking by UUID.
+
+### Booking Rules
+- Service must exist and be active; otherwise returns **404**.
+- Booking must be at least 1 minute in the future; otherwise returns **400**.
+- Duplicate `serviceId` + `bookingDate` + `bookingTime` slot returns **409**.
+- `bookingDateTime` is stored in UTC internally; responses always return separate `bookingDate` (YYYY-MM-DD) and `bookingTime` (HH:mm) in `Asia/Colombo`.
+- `status` cannot be set by the client — it always starts as `PENDING`.

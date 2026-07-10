@@ -20,11 +20,11 @@
 - [x] Seed script added
 
 ## Phase 3: Authentication
-- [ ] JWT Module configured
-- [ ] bcrypt hashing implemented
-- [ ] POST /api/v1/auth/register
-- [ ] POST /api/v1/auth/login
-- [ ] JwtAuthGuard implemented
+- [x] JWT Module configured
+- [x] bcrypt hashing implemented
+- [x] POST /api/v1/auth/register
+- [x] POST /api/v1/auth/login
+- [x] JwtAuthGuard implemented
 
 ## Phase 4: Service Management
 - [x] Create `ServicesModule`, `ServicesController`, `ServicesService`
@@ -39,17 +39,30 @@
 - [x] DTO validation for Services
 
 ## Phase 5: Booking Management & Business Rules
-- [ ] Booking module/controller/service
-- [ ] POST /api/v1/bookings (Public)
-- [ ] GET /api/v1/bookings (Protected)
-- [ ] GET /api/v1/bookings/:id (Protected)
+
+### Phase 5A: Booking Creation & Retrieval (Complete)
+- [x] BookingsModule, BookingsController, BookingsService
+- [x] POST /api/v1/bookings (Public)
+- [x] GET /api/v1/bookings (Protected, paginated, filterable)
+- [x] GET /api/v1/bookings/:id (Protected)
+- [x] bookingDate + bookingTime accepted separately, stored as UTC bookingDateTime
+- [x] bookingDateTime never exposed in API responses
+- [x] Timezone conversion via APP_TIMEZONE (Asia/Colombo) using Intl
+- [x] Invalid calendar dates rejected (e.g. 2026-02-30)
+- [x] Past booking rejection (full datetime comparison)
+- [x] Rule: Must belong to existing active service (404 if not)
+- [x] Rule: Prevent duplicate slots (409 - app-level + P2002 race condition)
+- [x] Status forced to PENDING on creation — not client-controlled
+- [x] DTO validation: customerName, customerEmail, customerPhone, serviceId, bookingDate, bookingTime, notes
+- [x] BookingQueryDto: page, limit, status, serviceId, bookingDate, customerEmail, search
+- [x] Reusable response mapper (mapBookingToResponse)
+- [x] Unit tests: 14 tests (timezone util + service)
+- [x] E2E tests: 14 tests
+
+### Phase 5B: Status Updates & Cancellation (Not Started)
 - [ ] PATCH /api/v1/bookings/:id/status (Protected)
 - [ ] PATCH /api/v1/bookings/:id/cancel (Protected)
-- [ ] Rule: Cancelled bookings cannot be marked as completed
-- [ ] Rule: Booking dates cannot be in the past
-- [ ] Rule: Must belong to existing service
-- [ ] Rule: Prevent duplicate slots
-- [ ] DTO validation for Bookings
+- [ ] Rule: Cancelled bookings cannot be re-opened or marked completed
 
 ## Phase 6: Core Features (Validation, Error, Docs)
 - [ ] Swagger API documentation
