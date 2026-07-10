@@ -1,154 +1,147 @@
 # EN2H Booking Platform API
 
-## Project Overview
-A Booking Platform REST API built for the EN2H Software Engineer Intern (NestJS) technical assignment. This API allows users to manage services and customers to book those services.
+A production-ready RESTful API for managing services and customer bookings, developed for the EN2H Software Engineer Intern technical assessment.
 
-## Features
-- **User Authentication**: JWT-based login and registration (Phase 3).
-- **Service Management**: CRUD operations for services.
-- **Booking Management**: Booking creation with robust date/time and duplicate-slot validation.
+## 1. Project Overview
+The EN2H Booking Platform API provides a robust backend solution for service-based businesses. It allows administrators to manage their service catalog and enables customers to create and track bookings. Built with strict adherence to enterprise design patterns, the API ensures data integrity, comprehensive validation, and a seamless developer experience.
 
-## Technology Stack
-- **Framework**: NestJS (TypeScript, strict mode)
+## 2. Features
+- **Robust Authentication**: JWT-based stateless authentication with secure password hashing (bcrypt).
+- **Service Management**: Full CRUD capabilities for services with logical (soft) deletion to preserve historical booking data.
+- **Booking Workflow**: Advanced lifecycle management (Pending, Confirmed, Completed, Cancelled) with strict state transition validation.
+- **Timezone Awareness**: Accurate handling of local booking times (Asia/Colombo) converted to UTC for safe database storage.
+- **Duplicate Prevention**: Database-level constraints combined with application-level validation to prevent double bookings.
+- **Pagination & Filtering**: Efficient data retrieval for listing endpoints.
+- **Comprehensive API Docs**: Fully integrated Swagger UI for interactive exploration and testing.
+
+## 3. Tech Stack
+- **Framework**: NestJS (v11) with TypeScript (Strict Mode)
 - **Database**: PostgreSQL 16
-- **ORM**: Prisma 5
-- **Docker**: Docker Compose for PostgreSQL
-- **Node**: Node.js 24 LTS
+- **ORM**: Prisma
+- **Validation**: class-validator, class-transformer
+- **Authentication**: Passport-JWT
+- **Testing**: Jest, Supertest
+- **Containerization**: Docker & Docker Compose
 
-## Folder Structure
-Following NestJS best practices, the codebase uses feature modules.
-- `src/auth/`
-- `src/users/`
-- `src/services/`
-- `src/bookings/`
-- `src/prisma/`
+## 4. Architecture
+The application follows a modular, controller-service-repository pattern (via Prisma), grouped by feature domains.
+- **Controllers**: Handle HTTP requests, routing, and Swagger annotations.
+- **Services**: Contain all business logic and rule validation.
+- **Prisma**: Serves as the data access layer.
+- **Guards/Pipes**: Handle authentication authorization and data transformation/validation at the request boundary.
 
-## Prerequisites
-- Node.js 24
-- Docker Desktop
-
-## Installation
-```bash
-git clone <repository_url>
-cd en2h-booking-platform-api
-npm install
+## 5. Folder Structure
+```text
+src/
+├── auth/            # Authentication logic, JWT strategies, and guards
+├── bookings/        # Booking lifecycle, DTOs, and controllers
+├── prisma/          # Prisma service and database connection
+├── services/        # Service management module and shared pipes
+├── users/           # User management (internal)
+├── app.module.ts    # Root application module
+└── main.ts          # Application entry point
 ```
 
-## Environment Variables
-Copy `.env.example` to `.env`:
+## 6. Prerequisites
+- **Node.js**: v24+
+- **npm**: v10+
+- **Docker**: Engine & Compose v2+
+
+## 7. Installation
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd en2h-booking-platform-api
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+## 8. Environment Variables
+Copy the example environment file and configure it:
 ```bash
 cp .env.example .env
 ```
-Ensure Docker PostgreSQL uses the same credentials specified in your `.env`.
+Ensure the `DATABASE_URL` matches your Docker setup and configure a secure `JWT_SECRET`.
 
-## PostgreSQL Setup (Docker)
+## 9. Docker Database Setup
 Start the PostgreSQL container:
 ```bash
-npm run db:up
-# Or standard docker command: docker compose up -d
+docker compose up -d
 ```
-To stop the database:
+Verify the database is running:
 ```bash
-npm run db:down
+docker compose ps
 ```
 
-## Prisma Setup & Running Migrations
-Initialize the schema and seed the database:
+## 10. Prisma Migration
+Apply the database schema and create necessary tables:
 ```bash
-npm run prisma:migrate
-npm run prisma:seed
+npx prisma migrate deploy
+```
+*(Optionally, run `npx prisma generate` if the client was not auto-generated during install).*
+
+## 11. Seed Database
+The project includes a seeder to populate an initial admin user and sample services.
+Run the seed script:
+```bash
+npx prisma db seed
 ```
 
-## Running the Application
+## 12. Running the API
+Start the NestJS development server:
 ```bash
 npm run start:dev
 ```
+The API will be available at `http://localhost:3000/api/v1`.
 
-## Authentication Usage
-The API uses JWT Bearer authentication.
+## 13. Running Tests
+The project includes an extensive suite of unit and end-to-end tests.
+- **Unit Tests**: `npm test`
+- **E2E Tests**: `npm run test:e2e`
 
-**Password Policy:** Passwords must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number/special character.
+## 14. Swagger URL
+Once the application is running, navigate to the Swagger UI to explore and test the endpoints:
+- **Local URL**: [http://localhost:3000/api/docs](http://localhost:3000/api/docs)
 
-Register a new user:
-```bash
-curl -X POST http://localhost:3000/api/v1/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"name": "Jane Doe", "email": "jane@example.com", "password": "StrongPassword1!"}'
-```
+## 15. Authentication
+Most endpoints (except public reads and login/register) are protected by a JWT auth guard.
+1. Authenticate via `POST /api/v1/auth/login` to receive an `access_token`.
+2. In Swagger, click the **Authorize** button at the top right and input the token.
+3. For raw HTTP requests, include the header: `Authorization: Bearer <your_token>`.
 
-Login:
-```bash
-curl -X POST http://localhost:3000/api/v1/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email": "jane@example.com", "password": "StrongPassword1!"}'
-```
-Responses do not include the `passwordHash`. Keep the returned `accessToken` and use it in subsequent requests as `Authorization: Bearer <token>`.
+## 16. API Endpoint Summary
+- **Auth**: `POST /auth/register`, `POST /auth/login`
+- **Services**: `POST /services`, `GET /services`, `GET /services/:id`, `PATCH /services/:id`, `DELETE /services/:id`
+- **Bookings**: `POST /bookings`, `GET /bookings`, `GET /bookings/:id`, `PATCH /bookings/:id/status`, `PATCH /bookings/:id/cancel`
 
-## Service Management
+## 17. Booking Lifecycle
+Bookings transition through a strict state machine:
+- `PENDING` → `CONFIRMED` or `CANCELLED`
+- `CONFIRMED` → `COMPLETED` or `CANCELLED`
+- `COMPLETED` and `CANCELLED` are terminal states.
+Same-status updates are safely ignored (idempotent).
 
-Public users can browse active services. Administrators (any authenticated user) can create, update, or remove them.
-- `GET /api/v1/services` (Public) - Lists all active services with pagination (`?page=1&limit=10`).
-- `GET /api/v1/services/:id` (Public) - Retrieves a specific active service.
-- `POST /api/v1/services` (Protected) - Creates a new service.
-- `PATCH /api/v1/services/:id` (Protected) - Updates a service. Send `{"isActive": true}` to reactivate a logically deleted service.
-- `DELETE /api/v1/services/:id` (Protected) - Performs logical deletion (`isActive=false`).
+## 18. Business Rules
+- **No Hard Deletion**: Deleted services are marked as `isActive=false`. They disappear from public API results but remain linked to historical bookings.
+- **Booking Time Restrictions**: Bookings must be scheduled at least 60 seconds in the future (relative to the configured server timezone).
+- **Duplicate Prevention**: A customer cannot book the same service at the exact same time.
 
-Prices are consistently returned as 2-decimal strings.
+## 19. Assumptions
+- **Timezone**: All local booking inputs are assumed to be in the `APP_TIMEZONE` (default: `Asia/Colombo`).
+- **Currency**: Prices are stored as high-precision decimals but serialized to clients as fixed-point 2-decimal strings to prevent floating-point errors.
 
-## API Documentation
-Swagger UI is available at `http://localhost:3000/api/docs`.
+## 20. Future Improvements
+- Implement automated email notifications for status transitions.
+- Add rate limiting and robust CORS configuration for a production frontend.
+- Introduce refresh tokens for extended session management.
+- Integrate Redis for caching frequently accessed data (like the active service catalog).
 
-## Business Rules & Assumptions
-- **Prisma Version**: This project pins Prisma 5 for the conventional schema-based configuration used in this time-constrained assessment. Newer Prisma versions use a different configuration and driver-adapter architecture. The pinned CLI and client versions match exactly.
-- **Booking Storage**: `bookingDate` (YYYY-MM-DD) and `bookingTime` (HH:mm) are converted to a single UTC `bookingDateTime` for database storage using the `Asia/Colombo` timezone. This ensures accurate duplicate slot prevention.
-- **Service Deletion**: Uses logical soft deletion (`isActive=false`) to preserve historical booking records.
-- **Duplicate Prevention**: Enforced at the database level using a unique index on `[serviceId, bookingDateTime]`.
-- **Public Service Reads**: Getting a list of services is public so that unauthenticated customers can find services to book.
+## 21. Development Seed Credentials
+If the seed script was executed, you can authenticate using:
+- **Email**: `admin@en2h.com`
+- **Password**: `password123`
 
-## Seed Credentials (Development Only)
-- **Email**: `admin@example.com`
-- **Password**: `ChangeMe123!`
-
-## Author
-**Naji Ahmad Javahir**
-- GitHub: [NajiAhmad18](https://github.com/NajiAhmad18)
-- Portfolio: [najiahmad.vercel.app](https://najiahmad.vercel.app)
-- LinkedIn: [naji-ahmad-javahir](https://www.linkedin.com/in/naji-ahmad-javahir/)
-
-## Booking Management
-
-Customers can submit bookings without authentication. Administrators can query and manage bookings.
-
-### Booking Endpoints
-- `POST /api/v1/bookings` **(Public)** — Create a booking. `bookingDate` and `bookingTime` are in `Asia/Colombo` timezone. Status is always `PENDING`.
-- `GET /api/v1/bookings` **(Protected)** — Paginated list. Supports `page`, `limit`, `status`, `serviceId`, `bookingDate`, `customerEmail`, and `search` filters.
-- `GET /api/v1/bookings/:id` **(Protected)** — Retrieve a booking by UUID.
-
-### Booking Rules
-- Service must exist and be active; otherwise returns **404**.
-- Booking must be at least 1 minute in the future; otherwise returns **400**.
-- Duplicate `serviceId` + `bookingDate` + `bookingTime` slot returns **409**.
-- `bookingDateTime` is stored in UTC internally; responses always return separate `bookingDate` (YYYY-MM-DD) and `bookingTime` (HH:mm) in `Asia/Colombo`.
-- `status` cannot be set by the client — it always starts as `PENDING`.
-
-## Booking Lifecycle
-
-Authenticated users can manage booking status using two dedicated endpoints.
-
-### Status Transitions
-| From | To | Result |
-|---|---|---|
-| PENDING | CONFIRMED | ✅ 200 |
-| PENDING | CANCELLED | ✅ 200 |
-| CONFIRMED | COMPLETED | ✅ 200 |
-| CONFIRMED | CANCELLED | ✅ 200 |
-| PENDING | COMPLETED | ❌ 409 |
-| CANCELLED | any | ❌ 409 |
-| COMPLETED | any | ❌ 409 |
-| same → same | — | ✅ 200 (idempotent) |
-
-### Lifecycle Endpoints
-- `PATCH /api/v1/bookings/:id/status` **(Protected)** — Transition to any allowed status.
-- `PATCH /api/v1/bookings/:id/cancel` **(Protected)** — Cancel PENDING or CONFIRMED bookings. Idempotent if already cancelled. Returns 409 if COMPLETED.
-
-No rows are ever deleted. All booking history is preserved.
+## 22. Author
+Developed as part of the EN2H Software Engineer Intern assessment.

@@ -13,8 +13,8 @@ A REST API built with NestJS, PostgreSQL, Prisma, and Docker to manage services 
 | 4 | Service Management (CRUD, soft deletion, pagination) | ✅ Complete |
 | 5A | Booking Creation & Retrieval | ✅ Complete |
 | 5B | Booking Lifecycle Management | ✅ Complete |
-| 6 | Documentation & Validation (Swagger, global error handling) | 🔲 Pending |
-| 7 | Bonus Features (pagination, search, tests — partially delivered in 5A/5B) | 🔲 Pending |
+| 6 | Documentation & Validation (Swagger, global error handling) | ✅ Complete |
+| 7 | Bonus Features (pagination, search, tests) | ✅ Complete |
 
 ## Phase 5B: Booking Lifecycle Management (Complete)
 

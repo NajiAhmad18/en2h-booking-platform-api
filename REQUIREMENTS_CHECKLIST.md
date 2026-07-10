@@ -72,18 +72,19 @@
 - [x] Unit tests: 15 lifecycle tests (8 updateStatus + 5 cancel + idempotency)
 - [x] E2E tests: 15 lifecycle tests
 
-## Phase 6: Core Features (Validation, Error, Docs)
-- [ ] Swagger API documentation
-- [ ] Global Exception Handling
+## Phase 6: Core Features (Validation, Error, Docs) (Complete)
+- [x] Swagger API documentation
+- [x] Global Exception Handling (ValidationPipe)
 
-## Phase 7: Bonus Features
-- [ ] Pagination on bookings (and services)
-- [ ] Search and Filter (by status, date, etc.)
-- [ ] Unit & E2E Testing
+## Phase 7: Bonus Features (Complete)
+- [x] Pagination on bookings (and services)
+- [x] Search and Filter (by status, date, etc.)
+- [x] Unit & E2E Testing (100+ tests)
 
-## Phase 8: Documentation Finalization
-- [ ] README.md completed
-- [ ] SRS.md completed
-- [ ] RUNNING_GUIDE.md completed
-- [ ] FINAL_AUDIT.md generated
-- [ ] SRS and Running Guide exported as PDF
+## Phase 8: Final Documentation (Complete)
+- [x] README.md completed and rewritten
+- [x] docs/API_REFERENCE.md generated
+- [x] docs/TESTING.md generated
+- [x] docs/ARCHITECTURE.md generated
+- [x] DECISIONS.md updated
+- [x] docs/IMPLEMENTATION_PLAN.md updated

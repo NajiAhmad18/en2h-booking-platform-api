@@ -54,3 +54,11 @@
 **Cancel Endpoint (`PATCH /:id/cancel`):** Provides a dedicated cancellation surface. CANCELLED is idempotent (200). COMPLETED returns 409. No row deletion occurs.
 
 **RejectEmptyBodyPipe reused:** The existing pipe from Phase 4 prevents empty `{}` bodies on `PATCH /:id/status`. The cancel endpoint has no body, so no pipe is needed there.
+
+## Phase 6: Core Features, Documentation & Refactoring
+
+**Common Utilities:** Extracted `PaginatedResult` and `RejectEmptyBodyPipe` into a centralized `src/common/` directory to eliminate code duplication across the Services and Bookings modules.
+
+**Swagger Annotations:** Enhanced existing Swagger documentation with explicit 400 Bad Request responses for DTO validation errors and standardized documentation across all endpoints.
+
+**Documentation Finalization:** Replaced individual scattered markdown files with a cohesive `docs/` directory containing `API_REFERENCE.md`, `TESTING.md`, and `ARCHITECTURE.md` to provide a professional, production-ready developer experience.
