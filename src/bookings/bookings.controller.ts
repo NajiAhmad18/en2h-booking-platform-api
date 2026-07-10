@@ -18,13 +18,14 @@ import {
   ApiParam,
   ApiBody,
 } from '@nestjs/swagger';
-import { BookingsService, PaginatedBookings } from './bookings.service';
+import { BookingsService } from './bookings.service';
+import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { BookingQueryDto } from './dto/booking-query.dto';
 import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { BookingResponse } from './utils/booking.mapper';
-import { RejectEmptyBodyPipe } from '../services/pipes/reject-empty-body.pipe';
+import { RejectEmptyBodyPipe } from '../common/pipes/reject-empty-body.pipe';
 
 @ApiTags('Bookings')
 @Controller('bookings')
@@ -92,7 +93,9 @@ export class BookingsController {
   })
   @ApiResponse({ status: 200, description: 'Paginated list of bookings.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  findAll(@Query() query: BookingQueryDto): Promise<PaginatedBookings> {
+  findAll(
+    @Query() query: BookingQueryDto,
+  ): Promise<PaginatedResult<BookingResponse>> {
     return this.bookingsService.findAll(query);
   }
 

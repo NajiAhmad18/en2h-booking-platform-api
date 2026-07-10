@@ -12,17 +12,14 @@ import {
   ParseIntPipe,
   ParseUUIDPipe,
 } from '@nestjs/common';
-import {
-  ServicesService,
-  PaginatedResult,
-  SerializedService,
-} from './services.service';
+import { ServicesService, SerializedService } from './services.service';
+import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from '@prisma/client';
-import { RejectEmptyBodyPipe } from './pipes/reject-empty-body.pipe';
+import { RejectEmptyBodyPipe } from '../common/pipes/reject-empty-body.pipe';
 import {
   ApiTags,
   ApiOperation,

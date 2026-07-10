@@ -12,17 +12,7 @@ import { BookingQueryDto } from './dto/booking-query.dto';
 import { convertLocalToUtc, isFutureBooking } from './utils/timezone.util';
 import { BookingResponse, mapBookingToResponse } from './utils/booking.mapper';
 
-export interface PaginatedBookings {
-  data: BookingResponse[];
-  pagination: {
-    page: number;
-    limit: number;
-    totalItems: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-  };
-}
+import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
 
 @Injectable()
 export class BookingsService {
@@ -109,7 +99,9 @@ export class BookingsService {
     }
   }
 
-  async findAll(query: BookingQueryDto): Promise<PaginatedBookings> {
+  async findAll(
+    query: BookingQueryDto,
+  ): Promise<PaginatedResult<BookingResponse>> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 10;
     const skip = (page - 1) * limit;

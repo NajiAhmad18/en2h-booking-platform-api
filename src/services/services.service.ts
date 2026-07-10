@@ -4,17 +4,7 @@ import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { Service, Prisma } from '@prisma/client';
 
-export interface PaginatedResult<T> {
-  data: T[];
-  pagination: {
-    page: number;
-    limit: number;
-    totalItems: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-  };
-}
+import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
 
 export type SerializedService = Omit<Service, 'price'> & { price: string };
 
