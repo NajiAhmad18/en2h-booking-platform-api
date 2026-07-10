@@ -59,10 +59,18 @@
 - [x] Unit tests: 14 tests (timezone util + service)
 - [x] E2E tests: 14 tests
 
-### Phase 5B: Status Updates & Cancellation (Not Started)
-- [ ] PATCH /api/v1/bookings/:id/status (Protected)
-- [ ] PATCH /api/v1/bookings/:id/cancel (Protected)
-- [ ] Rule: Cancelled bookings cannot be re-opened or marked completed
+### Phase 5B: Status Updates & Cancellation (Complete)
+- [x] PATCH /api/v1/bookings/:id/status (Protected)
+- [x] PATCH /api/v1/bookings/:id/cancel (Protected)
+- [x] Explicit transition map: PENDING→CONFIRMED, PENDING→CANCELLED, CONFIRMED→COMPLETED, CONFIRMED→CANCELLED
+- [x] Rule: CANCELLED and COMPLETED are terminal states
+- [x] Rule: Cancelled bookings cannot be re-opened or marked completed
+- [x] Rule: PENDING cannot skip to COMPLETED
+- [x] Same-status updates are idempotent (200, no DB write)
+- [x] UpdateBookingStatusDto with enum validation and unknown field rejection
+- [x] RejectEmptyBodyPipe applied to status endpoint
+- [x] Unit tests: 15 lifecycle tests (8 updateStatus + 5 cancel + idempotency)
+- [x] E2E tests: 15 lifecycle tests
 
 ## Phase 6: Core Features (Validation, Error, Docs)
 - [ ] Swagger API documentation

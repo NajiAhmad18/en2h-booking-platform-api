@@ -130,3 +130,25 @@ Customers can submit bookings without authentication. Administrators can query a
 - Duplicate `serviceId` + `bookingDate` + `bookingTime` slot returns **409**.
 - `bookingDateTime` is stored in UTC internally; responses always return separate `bookingDate` (YYYY-MM-DD) and `bookingTime` (HH:mm) in `Asia/Colombo`.
 - `status` cannot be set by the client — it always starts as `PENDING`.
+
+## Booking Lifecycle
+
+Authenticated users can manage booking status using two dedicated endpoints.
+
+### Status Transitions
+| From | To | Result |
+|---|---|---|
+| PENDING | CONFIRMED | ✅ 200 |
+| PENDING | CANCELLED | ✅ 200 |
+| CONFIRMED | COMPLETED | ✅ 200 |
+| CONFIRMED | CANCELLED | ✅ 200 |
+| PENDING | COMPLETED | ❌ 409 |
+| CANCELLED | any | ❌ 409 |
+| COMPLETED | any | ❌ 409 |
+| same → same | — | ✅ 200 (idempotent) |
+
+### Lifecycle Endpoints
+- `PATCH /api/v1/bookings/:id/status` **(Protected)** — Transition to any allowed status.
+- `PATCH /api/v1/bookings/:id/cancel` **(Protected)** — Cancel PENDING or CONFIRMED bookings. Idempotent if already cancelled. Returns 409 if COMPLETED.
+
+No rows are ever deleted. All booking history is preserved.

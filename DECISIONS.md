@@ -40,3 +40,17 @@
 **Status Enforcement:** `BookingStatus.PENDING` is hardcoded in the service `create()` method and is not read from the DTO. Even if a client sends `status`, the `whitelist: true` pipe will strip it and return 400 via `forbidNonWhitelisted: true`.
 
 **Search Design:** Simple case-insensitive `contains` filter via Prisma across `customerName`, `customerEmail`, and `customerPhone`. No full-text search engine required or introduced.
+
+## Phase 5B: Booking Lifecycle Management
+
+**Explicit Transition Map:** An `ALLOWED_TRANSITIONS` map is the single source of truth for all status transitions. No transition logic is duplicated. Any combination not in the map throws HTTP 409.
+
+**Terminal States:** `CANCELLED` and `COMPLETED` are terminal — no further transitions are permitted from either. This aligns with the PDF requirement that cancelled bookings cannot be completed.
+
+**PENDING → COMPLETED Rejected:** Skipping CONFIRMED is rejected to ensure the booking is explicitly acknowledged before completion.
+
+**Same-Status Idempotency:** `updateStatus()` short-circuits with a 200 + unchanged booking if current == requested status. No DB write is performed.
+
+**Cancel Endpoint (`PATCH /:id/cancel`):** Provides a dedicated cancellation surface. CANCELLED is idempotent (200). COMPLETED returns 409. No row deletion occurs.
+
+**RejectEmptyBodyPipe reused:** The existing pipe from Phase 4 prevents empty `{}` bodies on `PATCH /:id/status`. The cancel endpoint has no body, so no pipe is needed there.

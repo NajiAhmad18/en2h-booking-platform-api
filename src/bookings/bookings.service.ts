@@ -176,4 +176,91 @@ export class BookingsService {
     }
     return mapBookingToResponse(booking, this.timezone);
   }
+
+  // ─── Lifecycle ─────────────────────────────────────────────────────────────
+
+  /**
+   * Explicit allowed cross-status transition map.
+   * Any cross-status transition not listed here is rejected with HTTP 409.
+   * Same-status transitions (e.g. CANCELLED → CANCELLED) are always idempotent
+   * and are handled before this map is consulted — they never throw.
+   *
+   * Assumptions documented:
+   * - PENDING → COMPLETED is rejected (must confirm first)
+   * - CANCELLED → CONFIRMED / COMPLETED / PENDING is rejected (terminal state)
+   * - COMPLETED → PENDING / CONFIRMED / CANCELLED is rejected (terminal state)
+   */
+  private readonly ALLOWED_TRANSITIONS: Partial<
+    Record<BookingStatus, BookingStatus[]>
+  > = {
+    [BookingStatus.PENDING]: [BookingStatus.CONFIRMED, BookingStatus.CANCELLED],
+    [BookingStatus.CONFIRMED]: [
+      BookingStatus.COMPLETED,
+      BookingStatus.CANCELLED,
+    ],
+  };
+
+  /**
+   * Validates a status transition. Throws ConflictException for invalid
+   * transitions; returns silently for same-status (idempotent).
+   */
+  private validateTransition(
+    current: BookingStatus,
+    next: BookingStatus,
+  ): void {
+    if (current === next) return; // idempotent — caller returns unchanged booking
+    const allowed = this.ALLOWED_TRANSITIONS[current] ?? [];
+    if (!allowed.includes(next)) {
+      throw new ConflictException(
+        `Cannot transition booking from ${current} to ${next}`,
+      );
+    }
+  }
+
+  async updateStatus(
+    id: string,
+    newStatus: BookingStatus,
+  ): Promise<BookingResponse> {
+    const booking = await this.prisma.booking.findUnique({ where: { id } });
+    if (!booking) {
+      throw new NotFoundException(`Booking with ID ${id} not found`);
+    }
+
+    this.validateTransition(booking.status, newStatus);
+
+    // Idempotent: same status — return unchanged booking without a DB write
+    if (booking.status === newStatus) {
+      return mapBookingToResponse(booking, this.timezone);
+    }
+
+    const updated = await this.prisma.booking.update({
+      where: { id },
+      data: { status: newStatus },
+    });
+    return mapBookingToResponse(updated, this.timezone);
+  }
+
+  async cancel(id: string): Promise<BookingResponse> {
+    const booking = await this.prisma.booking.findUnique({ where: { id } });
+    if (!booking) {
+      throw new NotFoundException(`Booking with ID ${id} not found`);
+    }
+
+    // Already cancelled — idempotent
+    if (booking.status === BookingStatus.CANCELLED) {
+      return mapBookingToResponse(booking, this.timezone);
+    }
+
+    // COMPLETED bookings cannot be cancelled (terminal state)
+    if (booking.status === BookingStatus.COMPLETED) {
+      throw new ConflictException('Completed bookings cannot be cancelled');
+    }
+
+    // PENDING or CONFIRMED → CANCELLED
+    const updated = await this.prisma.booking.update({
+      where: { id },
+      data: { status: BookingStatus.CANCELLED },
+    });
+    return mapBookingToResponse(updated, this.timezone);
+  }
 }

@@ -58,6 +58,7 @@ describe('BookingsService', () => {
               findMany: jest.fn(),
               count: jest.fn(),
               create: jest.fn(),
+              update: jest.fn(),
             },
           },
         },
@@ -230,6 +231,220 @@ describe('BookingsService', () => {
     it('should throw NotFoundException if booking does not exist', async () => {
       prisma.booking.findUnique.mockResolvedValue(null);
       await expect(service.findOne('missing-id')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  // ─── Phase 5B: Lifecycle Tests ─────────────────────────────────────────────
+
+  describe('updateStatus', () => {
+    it('PENDING → CONFIRMED should succeed', async () => {
+      const pending = { ...mockBooking, status: BookingStatus.PENDING };
+      prisma.booking.findUnique.mockResolvedValue(pending);
+      prisma.booking.update.mockResolvedValue({
+        ...pending,
+        status: BookingStatus.CONFIRMED,
+      });
+
+      const result = await service.updateStatus(
+        'bk-uuid',
+        BookingStatus.CONFIRMED,
+      );
+      expect(result.status).toBe(BookingStatus.CONFIRMED);
+      expect(
+        (result as Record<string, unknown>).bookingDateTime,
+      ).toBeUndefined();
+    });
+
+    it('PENDING → CANCELLED should succeed', async () => {
+      const pending = { ...mockBooking, status: BookingStatus.PENDING };
+      prisma.booking.findUnique.mockResolvedValue(pending);
+      prisma.booking.update.mockResolvedValue({
+        ...pending,
+        status: BookingStatus.CANCELLED,
+      });
+
+      const result = await service.updateStatus(
+        'bk-uuid',
+        BookingStatus.CANCELLED,
+      );
+      expect(result.status).toBe(BookingStatus.CANCELLED);
+    });
+
+    it('CONFIRMED → COMPLETED should succeed', async () => {
+      const confirmed = { ...mockBooking, status: BookingStatus.CONFIRMED };
+      prisma.booking.findUnique.mockResolvedValue(confirmed);
+      prisma.booking.update.mockResolvedValue({
+        ...confirmed,
+        status: BookingStatus.COMPLETED,
+      });
+
+      const result = await service.updateStatus(
+        'bk-uuid',
+        BookingStatus.COMPLETED,
+      );
+      expect(result.status).toBe(BookingStatus.COMPLETED);
+    });
+
+    it('CONFIRMED → CANCELLED should succeed', async () => {
+      const confirmed = { ...mockBooking, status: BookingStatus.CONFIRMED };
+      prisma.booking.findUnique.mockResolvedValue(confirmed);
+      prisma.booking.update.mockResolvedValue({
+        ...confirmed,
+        status: BookingStatus.CANCELLED,
+      });
+
+      const result = await service.updateStatus(
+        'bk-uuid',
+        BookingStatus.CANCELLED,
+      );
+      expect(result.status).toBe(BookingStatus.CANCELLED);
+    });
+
+    it('PENDING → COMPLETED should be rejected (409)', async () => {
+      const pending = { ...mockBooking, status: BookingStatus.PENDING };
+      prisma.booking.findUnique.mockResolvedValue(pending);
+
+      await expect(
+        service.updateStatus('bk-uuid', BookingStatus.COMPLETED),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('CANCELLED → COMPLETED should be rejected (409)', async () => {
+      const cancelled = { ...mockBooking, status: BookingStatus.CANCELLED };
+      prisma.booking.findUnique.mockResolvedValue(cancelled);
+
+      await expect(
+        service.updateStatus('bk-uuid', BookingStatus.COMPLETED),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('CANCELLED → CONFIRMED should be rejected (409)', async () => {
+      const cancelled = { ...mockBooking, status: BookingStatus.CANCELLED };
+      prisma.booking.findUnique.mockResolvedValue(cancelled);
+
+      await expect(
+        service.updateStatus('bk-uuid', BookingStatus.CONFIRMED),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('COMPLETED → CANCELLED should be rejected (409)', async () => {
+      const completed = { ...mockBooking, status: BookingStatus.COMPLETED };
+      prisma.booking.findUnique.mockResolvedValue(completed);
+
+      await expect(
+        service.updateStatus('bk-uuid', BookingStatus.CANCELLED),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('PENDING → PENDING is idempotent — no DB write (200)', async () => {
+      const pending = { ...mockBooking, status: BookingStatus.PENDING };
+      prisma.booking.findUnique.mockResolvedValue(pending);
+
+      const result = await service.updateStatus(
+        'bk-uuid',
+        BookingStatus.PENDING,
+      );
+      expect(prisma.booking.update).not.toHaveBeenCalled();
+      expect(result.status).toBe(BookingStatus.PENDING);
+    });
+
+    it('CONFIRMED → CONFIRMED is idempotent — no DB write (200)', async () => {
+      const confirmed = { ...mockBooking, status: BookingStatus.CONFIRMED };
+      prisma.booking.findUnique.mockResolvedValue(confirmed);
+
+      const result = await service.updateStatus(
+        'bk-uuid',
+        BookingStatus.CONFIRMED,
+      );
+      expect(prisma.booking.update).not.toHaveBeenCalled();
+      expect(result.status).toBe(BookingStatus.CONFIRMED);
+    });
+
+    it('CANCELLED → CANCELLED is idempotent — no DB write (200)', async () => {
+      const cancelled = { ...mockBooking, status: BookingStatus.CANCELLED };
+      prisma.booking.findUnique.mockResolvedValue(cancelled);
+
+      const result = await service.updateStatus(
+        'bk-uuid',
+        BookingStatus.CANCELLED,
+      );
+      expect(prisma.booking.update).not.toHaveBeenCalled();
+      expect(result.status).toBe(BookingStatus.CANCELLED);
+    });
+
+    it('COMPLETED → COMPLETED is idempotent — no DB write (200)', async () => {
+      const completed = { ...mockBooking, status: BookingStatus.COMPLETED };
+      prisma.booking.findUnique.mockResolvedValue(completed);
+
+      const result = await service.updateStatus(
+        'bk-uuid',
+        BookingStatus.COMPLETED,
+      );
+      expect(prisma.booking.update).not.toHaveBeenCalled();
+      expect(result.status).toBe(BookingStatus.COMPLETED);
+    });
+
+    it('should throw NotFoundException for missing booking (404)', async () => {
+      prisma.booking.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.updateStatus('missing', BookingStatus.CONFIRMED),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('cancel', () => {
+    it('PENDING → CANCELLED should succeed', async () => {
+      const pending = { ...mockBooking, status: BookingStatus.PENDING };
+      prisma.booking.findUnique.mockResolvedValue(pending);
+      prisma.booking.update.mockResolvedValue({
+        ...pending,
+        status: BookingStatus.CANCELLED,
+      });
+
+      const result = await service.cancel('bk-uuid');
+      expect(result.status).toBe(BookingStatus.CANCELLED);
+      expect(
+        (result as Record<string, unknown>).bookingDateTime,
+      ).toBeUndefined();
+    });
+
+    it('CONFIRMED → CANCELLED should succeed', async () => {
+      const confirmed = { ...mockBooking, status: BookingStatus.CONFIRMED };
+      prisma.booking.findUnique.mockResolvedValue(confirmed);
+      prisma.booking.update.mockResolvedValue({
+        ...confirmed,
+        status: BookingStatus.CANCELLED,
+      });
+
+      const result = await service.cancel('bk-uuid');
+      expect(result.status).toBe(BookingStatus.CANCELLED);
+    });
+
+    it('COMPLETED → CANCELLED should be rejected (409)', async () => {
+      const completed = { ...mockBooking, status: BookingStatus.COMPLETED };
+      prisma.booking.findUnique.mockResolvedValue(completed);
+
+      await expect(service.cancel('bk-uuid')).rejects.toThrow(
+        ConflictException,
+      );
+    });
+
+    it('CANCELLED → CANCELLED should be idempotent (no DB write)', async () => {
+      const cancelled = { ...mockBooking, status: BookingStatus.CANCELLED };
+      prisma.booking.findUnique.mockResolvedValue(cancelled);
+
+      const result = await service.cancel('bk-uuid');
+      expect(prisma.booking.update).not.toHaveBeenCalled();
+      expect(result.status).toBe(BookingStatus.CANCELLED);
+    });
+
+    it('should throw NotFoundException for missing booking (404)', async () => {
+      prisma.booking.findUnique.mockResolvedValue(null);
+
+      await expect(service.cancel('missing')).rejects.toThrow(
         NotFoundException,
       );
     });

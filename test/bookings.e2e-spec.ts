@@ -255,4 +255,164 @@ describe('BookingsController (e2e)', () => {
         .expect(404);
     });
   });
+
+  // ─── Phase 5B: Lifecycle ───────────────────────────────────────────────────
+
+  describe('PATCH /api/v1/bookings/:id/status (Protected)', () => {
+    it('should return 401 without token', () => {
+      return request(app.getHttpServer())
+        .patch(`/api/v1/bookings/${bookingId}/status`)
+        .send({ status: 'CONFIRMED' })
+        .expect(401);
+    });
+
+    it('should return 400 for empty body', () => {
+      return request(app.getHttpServer())
+        .patch(`/api/v1/bookings/${bookingId}/status`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({})
+        .expect(400);
+    });
+
+    it('should return 400 for unknown field', () => {
+      return request(app.getHttpServer())
+        .patch(`/api/v1/bookings/${bookingId}/status`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ status: 'CONFIRMED', unknownField: true })
+        .expect(400);
+    });
+
+    it('should return 400 for invalid UUID', () => {
+      return request(app.getHttpServer())
+        .patch('/api/v1/bookings/not-a-uuid/status')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ status: 'CONFIRMED' })
+        .expect(400);
+    });
+
+    it('PENDING → CONFIRMED should succeed (200)', async () => {
+      const res = await request(app.getHttpServer())
+        .patch(`/api/v1/bookings/${bookingId}/status`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ status: 'CONFIRMED' })
+        .expect(200);
+
+      expect(res.body.status).toBe('CONFIRMED');
+      expect(res.body.bookingDateTime).toBeUndefined();
+    });
+
+    it('PENDING → COMPLETED should be rejected (409)', async () => {
+      // Create a fresh PENDING booking for this test
+      const freshRes = await request(app.getHttpServer())
+        .post('/api/v1/bookings')
+        .send({
+          customerName: 'Lifecycle Test',
+          customerEmail: 'lifecycle@example.com',
+          customerPhone: '+94770000001',
+          serviceId,
+          bookingDate: '2027-09-20',
+          bookingTime: '11:00',
+        })
+        .expect(201);
+
+      return request(app.getHttpServer())
+        .patch(`/api/v1/bookings/${freshRes.body.id}/status`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ status: 'COMPLETED' })
+        .expect(409);
+    });
+
+    it('CONFIRMED → COMPLETED should succeed (200)', async () => {
+      const res = await request(app.getHttpServer())
+        .patch(`/api/v1/bookings/${bookingId}/status`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ status: 'COMPLETED' })
+        .expect(200);
+
+      expect(res.body.status).toBe('COMPLETED');
+    });
+
+    it('COMPLETED → CANCELLED should be rejected (409)', async () => {
+      return request(app.getHttpServer())
+        .patch(`/api/v1/bookings/${bookingId}/status`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ status: 'CANCELLED' })
+        .expect(409);
+    });
+
+    it('should return 404 for missing booking', () => {
+      return request(app.getHttpServer())
+        .patch('/api/v1/bookings/00000000-0000-0000-0000-000000000000/status')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ status: 'CONFIRMED' })
+        .expect(404);
+    });
+  });
+
+  describe('PATCH /api/v1/bookings/:id/cancel (Protected)', () => {
+    let cancelBookingId: string;
+
+    beforeAll(async () => {
+      // Create a dedicated PENDING booking for cancel tests
+      const res = await request(app.getHttpServer())
+        .post('/api/v1/bookings')
+        .send({
+          customerName: 'Cancel Test',
+          customerEmail: 'cancel@example.com',
+          customerPhone: '+94770000002',
+          serviceId,
+          bookingDate: '2027-10-05',
+          bookingTime: '09:00',
+        })
+        .expect(201);
+      cancelBookingId = res.body.id;
+    });
+
+    it('should return 401 without token', () => {
+      return request(app.getHttpServer())
+        .patch(`/api/v1/bookings/${cancelBookingId}/cancel`)
+        .expect(401);
+    });
+
+    it('should return 400 for invalid UUID', () => {
+      return request(app.getHttpServer())
+        .patch('/api/v1/bookings/not-a-uuid/cancel')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(400);
+    });
+
+    it('PENDING → CANCELLED should succeed (200)', async () => {
+      const res = await request(app.getHttpServer())
+        .patch(`/api/v1/bookings/${cancelBookingId}/cancel`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+
+      expect(res.body.status).toBe('CANCELLED');
+      expect(res.body.bookingDateTime).toBeUndefined();
+    });
+
+    it('CANCELLED → CANCELLED should be idempotent (200)', async () => {
+      const res = await request(app.getHttpServer())
+        .patch(`/api/v1/bookings/${cancelBookingId}/cancel`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+
+      expect(res.body.status).toBe('CANCELLED');
+    });
+
+    it('COMPLETED → cancel should be rejected (409)', async () => {
+      // bookingId was set to COMPLETED in the status tests above
+      return request(app.getHttpServer())
+        .patch(`/api/v1/bookings/${bookingId}/cancel`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(409);
+    });
+
+    it('should return 404 for missing booking', () => {
+      return request(app.getHttpServer())
+        .patch('/api/v1/bookings/00000000-0000-0000-0000-000000000000/cancel')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(404);
+    });
+  });
 });
