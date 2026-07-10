@@ -65,12 +65,30 @@ npm run start:dev
 ```
 
 ## Authentication Usage
-*To be implemented in Phase 3.*
+The API uses JWT Bearer authentication.
+
+**Password Policy:** Passwords must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number/special character.
+
+Register a new user:
+```bash
+curl -X POST http://localhost:3000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Jane Doe", "email": "jane@example.com", "password": "StrongPassword1!"}'
+```
+
+Login:
+```bash
+curl -X POST http://localhost:3000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "jane@example.com", "password": "StrongPassword1!"}'
+```
+Responses do not include the `passwordHash`. Keep the returned `accessToken` and use it in subsequent requests as `Authorization: Bearer <token>`.
 
 ## API Documentation
-*Swagger UI will be available at `/api/docs`.*
+Swagger UI is available at `http://localhost:3000/api/docs`.
 
 ## Business Rules & Assumptions
+- **Prisma Version**: This project pins Prisma 5 for the conventional schema-based configuration used in this time-constrained assessment. Newer Prisma versions use a different configuration and driver-adapter architecture. The pinned CLI and client versions match exactly.
 - **Booking Storage**: `bookingDate` (YYYY-MM-DD) and `bookingTime` (HH:mm) are converted to a single UTC `bookingDateTime` for database storage using the `Asia/Colombo` timezone. This ensures accurate duplicate slot prevention.
 - **Service Deletion**: Uses logical soft deletion (`isActive=false`) to preserve historical booking records.
 - **Duplicate Prevention**: Enforced at the database level using a unique index on `[serviceId, bookingDateTime]`.

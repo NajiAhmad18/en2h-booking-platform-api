@@ -1,26 +1,15 @@
-# Architectural Decisions
+# Decisions Log
 
-## Service Deletion
-- **Decision**: Soft Deletion (Deactivation)
-- **Reasoning**: The PDF requires a "Delete Service" feature. However, hard-deleting a service would break historical booking records (as a booking belongs to a service). Therefore, we will implement logical deactivation using the `isActive` flag or reject deletion if bookings exist. For simplicity and user experience, we will use soft deletion (`isActive = false`) so historical bookings retain their service details.
+## Phase 2: Database and ORM
+**Prisma Downgrade (v7 to v5):** This project pins Prisma 5 for the conventional schema-based configuration used in this time-constrained assessment. Newer Prisma versions use a different configuration and driver-adapter architecture. The pinned CLI and client versions match exactly.
 
-## Booking Storage (Date & Time)
-- **Decision**: Accept `bookingDate` and `bookingTime` separately, convert to UTC `bookingDateTime` for storage.
-- **Reasoning**: The PDF requires `bookingDate` (YYYY-MM-DD) and `bookingTime` (HH:mm) as separate fields on the model. Storing them as separate database strings introduces validation and timezone complexity, and makes it harder to prevent duplicate slots or past dates.
-- **Assumption**: 
-  - The API receives dates and times separately in the `Asia/Colombo` timezone (since EN2H operates in Sri Lanka). 
-  - We convert this local time to a UTC timestamp (`bookingDateTime`) for database storage. 
-  - The API will format the returned value back into `bookingDate` and `bookingTime` strings for the response. 
-  - This ensures accurate conflict detection (duplicate bookings) and prevents past-date bookings without timezone drift.
+**Date/Time Storage:** Booking storage combines `bookingDate` and `bookingTime` into a single `bookingDateTime` UTC timestamp. This allows straightforward multi-column unique constraints (serviceId + bookingDateTime) to prevent double bookings.
 
-## Duplicate Booking Prevention
-- **Decision**: Database-level unique constraint on `serviceId` + `bookingDateTime`.
-- **Reasoning**: Application-level checks are subject to race conditions under concurrent load. Enforcing a `@@unique([serviceId, bookingDateTime])` in the Prisma schema ensures the database prevents duplicate slots robustly.
+**Service Deletion:** We use a logical deletion strategy (`isActive = false`) rather than physical database deletion (`DELETE`). This prevents cascading deletions from destroying historical booking records and metrics.
 
-## Public Service Reads
-- **Decision**: Service reading is public.
-- **Reasoning**: The PDF says "Authenticated users should be able to... Get All Services", but it also says customers can "create bookings without authentication". Customers cannot realistically create a booking without discovering the available services and their IDs first. Therefore, we assume read access (GET) is public, while mutation (POST/PATCH/DELETE) requires authentication.
+## Phase 3: Authentication and Users
+**Authentication Strategy:** We use stateless JWT authentication via `@nestjs/passport` and `passport-jwt`. The payload is minimal (`sub` and `email`).
 
-## Booking Privacy
-- **Decision**: Booking reads/updates are protected.
-- **Reasoning**: Public users may create bookings, but listing bookings, retrieving booking details, updating status, and cancelling bookings must require authentication to protect customer personal information (Name, Email, Phone).
+**E2E Test Database Isolation:** Due to time constraints in this phase, E2E tests run against the primary development database. They are made robust by using uniquely generated emails (`test_${Date.now()}@example.com`) to prevent collisions and avoid database resets. Comprehensive unit testing provides the primary validation safety net.
+
+**Password Hashing:** Passwords are hashed using `bcrypt` and salt rounds are strictly loaded from `BCRYPT_SALT_ROUNDS` via `@nestjs/config`.
