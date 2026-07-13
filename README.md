@@ -1,4 +1,4 @@
-# EN2H Booking Platform API
+# Booking Platform API
 
 A production-ready RESTful API for managing services and customer bookings, developed for the EN2H Software Engineer Intern technical assessment.
 
